@@ -16,23 +16,33 @@
     android:layout_centerVertical="true"
     android:layout_centerHorizontal="true"
     android:gravity="center_vertical"
+    android:background="#128cab"
     tools:context=".StartDirections">
 
 
-    <EditText
+
+    <fragment
         android:id="@+id/directions_to"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Choose Destination ... "/>
+        android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
+        />
     <Button
         android:id="@+id/startNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="Navigate"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"
         android:background="#fff"
         android:shadowRadius="5"/>
+    <TextView
+        android:id="@+id/locationText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"/>
+    <ProgressBar
+        android:id="@+id/progressBar1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"></ProgressBar>
 
 </LinearLayout>
