@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="google-maps-services-0.1.16">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.maps/google-maps-services/0.1.16/35be1874f3f1f2a461f1ce0f409da318b6c21365/google-maps-services-0.1.16.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.maps/google-maps-services/0.1.16/ef0062cdd5a4ce5b94bb046edf87adf4a40feca1/google-maps-services-0.1.16-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

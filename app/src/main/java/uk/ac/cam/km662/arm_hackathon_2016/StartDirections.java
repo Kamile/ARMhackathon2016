@@ -37,28 +37,44 @@ import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.maps.DirectionsApi;
+import com.google.maps.GeoApiContext;
+import com.google.maps.model.DirectionsResult;
+import com.google.maps.model.DirectionsRoute;
+import com.google.maps.model.DirectionsStep;
+import com.google.maps.model.TravelMode;
+import com.google.maps.model.Unit;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 
 public class StartDirections extends AppCompatActivity implements OnConnectionFailedListener {
 
     private static final String TAG = StartDirections.class.getSimpleName();
     private Button startNavigation;
-    private PlaceAutocompleteFragment inputDestination;
+
+    private PlaceAutocompleteFragment inputStartDestination;
+    private PlaceAutocompleteFragment inputEndDestination;
+
     private TextView editLocation;
     private ProgressBar progressBar;
 
     private GoogleApiClient mGoogleApiClient;
+    private String API_KEY =  "AIzaSyD7iDVVCQi719H5DK93NKWqZkJt1E3YRNs";
 
     private Boolean flag = false;
+    private Boolean firstLocation = true;
 
     private LocationListener locationListener = null;
     private LocationManager locationManager = null;
-    Location currentLocation;
-    LatLng destinationLocation;
+    private LatLng endLocation;
+    private LatLng startLocation;
+
+    private String txtRoute = "";
 
 
     @Override
@@ -66,7 +82,9 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start_directions);
 
-        inputDestination = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.directions_to);
+        inputStartDestination = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.directions_from);
+        inputEndDestination = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.directions_to);
+
         startNavigation = (Button) findViewById(R.id.startNavigation);
         editLocation = (TextView) findViewById(R.id.locationText);
         progressBar = (ProgressBar) findViewById(R.id.progressBar1);
@@ -84,11 +102,30 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
                 .build();
         mGoogleApiClient.connect();
 
-        inputDestination.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+
+        inputStartDestination.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
-                destinationLocation = place.getLatLng();
-                // TODO: Get info about the selected place.
+
+                //Get info about the selected place.
+                startLocation = place.getLatLng();
+                editLocation.setText("dest_latitude: " + startLocation.latitude + " dest_longitude: " + startLocation.longitude);
+                Log.i(TAG, "Place: " + place.getName());
+            }
+
+            @Override
+            public void onError(Status status) {
+                Log.i(TAG, "An error occurred: " + status);
+            }
+        });
+
+        inputEndDestination.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+
+                //Get info about the selected destination.
+                endLocation = place.getLatLng();
+                editLocation.setText("dest_latitude: " + endLocation.latitude + " dest_longitude: " + endLocation.longitude);
                 Log.i(TAG, "Place: " + place.getName());
             }
 
@@ -99,25 +136,107 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
             }
         });
 
+
         startNavigation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                flag = displayGpsStatus();
-                if (flag) {
-                    editLocation.setText("Move device to see changes.");
-                    progressBar.setVisibility(View.VISIBLE);
+                GeoApiContext context = new GeoApiContext().setApiKey("AIzaSyBvcstUhXLM25Ob5_fN4UaJMLAuVbUNOyw");
+                context .setQueryRateLimit(3)
+                        .setConnectTimeout(1, TimeUnit.SECONDS)
+                        .setReadTimeout(1, TimeUnit.SECONDS)
+                        .setWriteTimeout(1, TimeUnit.SECONDS);
 
-                    locationListener = new MyLocationListener();
-                    try {
-                        locationManager.requestLocationUpdates(LocationManager
-                                .GPS_PROVIDER, 5000, 10, locationListener);
-                    } catch (SecurityException e) {
-                        System.out.print("No permission to access location.");
-                    }
 
-                } else {
-                    alertbox("Gps Status!!", "Your GPS is: OFF");
+                DirectionsResult results = null;
+                try {
+                    results = DirectionsApi.newRequest(context)
+                            .mode(TravelMode.BICYCLING)
+                            .avoid(DirectionsApi.RouteRestriction.HIGHWAYS, DirectionsApi.RouteRestriction.TOLLS, DirectionsApi.RouteRestriction.FERRIES)
+                            .units(Unit.METRIC)
+                            .region("uk")
+                            .origin(startLocation.latitude + "," + startLocation.longitude)
+                            .destination(endLocation.latitude + "," + endLocation.longitude).await();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
+
+                String oneDirection = null;
+                String duration = "";
+                String fullRoute = "";
+                if (results.routes.length != 0){
+                    DirectionsRoute firstRoute = results.routes[0];
+                    for(int i = 0; i < firstRoute.legs.length; i++){
+                        for (int j = 0; j < firstRoute.legs[i].steps.length; j++){
+
+                            oneDirection = firstRoute.legs[i].steps[j].htmlInstructions;
+                            //get duration in ms
+                            duration = String.valueOf(firstRoute.legs[i].steps[j].duration.inSeconds * 1000L);
+                            fullRoute += "\n" + firstRoute.legs[i].steps[j].htmlInstructions + " duration " + firstRoute.legs[i].steps[j].duration.inSeconds;
+                            /**
+                             * Parse DirectionsStep String
+                             *
+                             * if contains right --> turn right
+                             * if contains left --> turn left
+                             * if roundabout
+                             *      --> 1st exit --> turn left
+                             *      --> 2nd exit --> go straight
+                             *      --> 3rd exit + --> turn right
+                             * else go straight and output time to go straight RAND(0,10)
+                             */
+
+                            if (oneDirection.contains("left")
+                                    || (oneDirection.contains("roundabout") && oneDirection.contains("1st"))){
+
+                                txtRoute += "1 " + duration + "\n";
+
+                            } else if (oneDirection.contains("roundabout") && (oneDirection.contains("2nd") || oneDirection.contains("through"))){
+
+                                txtRoute += "2 "+ duration +"\n";
+
+                            } else if (oneDirection.contains("right")
+                                    || oneDirection.contains("roundabout")){
+
+                                txtRoute +="3 " + duration + "\n";
+
+                            } else {
+
+                                txtRoute += "2 "+ duration + "\n";
+
+                            }
+
+                        }
+                    }
+                } else {
+                    txtRoute = "0"; //no route found
+                }
+
+                //editLocation.setText(txtRoute + fullRoute);
+
+
+
+
+
+
+
+
+
+
+//                flag = displayGpsStatus();
+//                if (flag) {
+//                    editLocation.setText("Move device to see changes.");
+//                    progressBar.setVisibility(View.VISIBLE);
+//
+//                    locationListener = new MyLocationListener();
+//                    try {
+//                        locationManager.requestLocationUpdates(LocationManager
+//                                .GPS_PROVIDER, 5000, 10, locationListener);
+//                    } catch (SecurityException e) {
+//                        System.out.print("No permission to access location.");
+//                    }
+//
+//                } else {
+//                    alertbox("Gps Status!!", "Your GPS is: OFF");
+//                }
             }
         });
     }
@@ -168,10 +287,17 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
         }
     }
 
-    private class MyLocationListener implements LocationListener {
-        @Override
-        public void onLocationChanged(Location loc) {
-
+//    private class MyLocationListener implements LocationListener {
+//        @Override
+//        public void onLocationChanged(Location loc) {
+//
+//            if (firstLocation){ //when we get first location, set to start location and get route
+//                //startLocation = loc;
+//                firstLocation = false;
+//
+//
+//            }
+//
 //            editLocation.setText("");
 //            progressBar.setVisibility(View.INVISIBLE);
 //            Toast.makeText(getBaseContext(),"Location changed : Lat: " +
@@ -200,24 +326,37 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
 //            String s = longitude+"\n"+latitude +
 //                    "\n\nMy Currrent City is: "+cityName;
 //            editLocation.setText(s);
-        }
-
-        @Override
-        public void onProviderDisabled(String provider) {
-            // TODO Auto-generated method stub
-        }
-
-        @Override
-        public void onProviderEnabled(String provider) {
-            // TODO Auto-generated method stub
-        }
-
-        @Override
-        public void onStatusChanged(String provider,
-                                    int status, Bundle extras) {
-            // TODO Auto-generated method stub
-        }
-    }
+//        }
+//
+//        public Location getParsedLocation(LatLng latLng){
+//            Location mapLocParsed = new Location("LatLng");
+//            mapLocParsed.setLongitude(latLng.longitude);
+//            mapLocParsed.setLatitude(latLng.latitude);
+//            mapLocParsed.setAltitude(0);
+//            return mapLocParsed;
+//        }
+//
+//        public boolean isWithin(Location A, Location B, double range){
+//            return (A.distanceTo(B) < range);
+//        }
+//
+//
+//        @Override
+//        public void onProviderDisabled(String provider) {
+//            // TODO Auto-generated method stub
+//        }
+//
+//        @Override
+//        public void onProviderEnabled(String provider) {
+//            // TODO Auto-generated method stub
+//        }
+//
+//        @Override
+//        public void onStatusChanged(String provider,
+//                                    int status, Bundle extras) {
+//            // TODO Auto-generated method stub
+//        }
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
