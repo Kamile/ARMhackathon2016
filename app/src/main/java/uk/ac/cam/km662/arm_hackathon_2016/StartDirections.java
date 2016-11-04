@@ -1,34 +1,27 @@
 package uk.ac.cam.km662.arm_hackathon_2016;
 
-import android.Manifest;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -39,24 +32,17 @@ import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.maps.DirectionsApi;
 import com.google.maps.GeoApiContext;
 import com.google.maps.model.DirectionsResult;
 import com.google.maps.model.DirectionsRoute;
-import com.google.maps.model.DirectionsStep;
 import com.google.maps.model.TravelMode;
 import com.google.maps.model.Unit;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.List;
-import java.util.Locale;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 
@@ -143,7 +129,6 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
 
             @Override
             public void onError(Status status) {
-                // TODO: Handle the error.
                 Log.i(TAG, "An error occurred: " + status);
             }
         });
@@ -292,8 +277,6 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
         } else {
             writer.println("	uBit.sleep(" + duration/timeFactor + "); ");
         }
-
-
     }
 
 
@@ -313,9 +296,6 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
             String[][] dirNtime = new String[singleCommands.length][2];
             for (int i=0; i<singleCommands.length; i++) {
                 dirNtime[i] = singleCommands[i].split(" ");
-                //System.out.println(dirNtime[i][0]);
-                //System.out.println(dirNtime[i][1]);
-
             }
 
             writer = new PrintWriter(file);
