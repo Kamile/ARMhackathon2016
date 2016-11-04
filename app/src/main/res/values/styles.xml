@@ -4,7 +4,7 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:colorBackground">#128cab</item>
+        <item name="android:colorBackground">#0183a5</item>
         <item name="android:textColorHint">#fff</item>
     </style>
 </resources>

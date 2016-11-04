@@ -1,5 +1,4 @@
 <ScrollView
-
     android:id="@+id/get_directions"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -40,6 +39,11 @@
                 android:layout_height="wrap_content"
                 android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
                 />
+            <View
+                android:layout_width="fill_parent"
+                android:layout_height="1dip"
+                android:background="#f1f1f1"/>
+
             <fragment
                 android:id="@+id/directions_to"
                 android:layout_width="match_parent"
@@ -52,8 +56,9 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="Navigate"
-                android:background="#fff"
-                android:shadowRadius="5"/>
+                android:shadowRadius="5"
+                android:background="@drawable/round_button"
+                />
             <TextView
                 android:id="@+id/locationText"
                 android:layout_width="match_parent"

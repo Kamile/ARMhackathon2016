@@ -14,6 +14,8 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
+import android.os.Handler;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -37,6 +39,7 @@ import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.maps.DirectionsApi;
 import com.google.maps.GeoApiContext;
 import com.google.maps.model.DirectionsResult;
@@ -45,11 +48,18 @@ import com.google.maps.model.DirectionsStep;
 import com.google.maps.model.TravelMode;
 import com.google.maps.model.Unit;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
+
 
 
 public class StartDirections extends AppCompatActivity implements OnConnectionFailedListener {
@@ -74,7 +84,7 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
     private LatLng endLocation;
     private LatLng startLocation;
 
-    private String txtRoute = "";
+    private String fileName = "outputRoute.cpp";
 
 
     @Override
@@ -84,6 +94,10 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
 
         inputStartDestination = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.directions_from);
         inputEndDestination = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.directions_to);
+
+        inputStartDestination.setHint("Start");
+
+        inputEndDestination.setHint("Destination");
 
         startNavigation = (Button) findViewById(R.id.startNavigation);
         editLocation = (TextView) findViewById(R.id.locationText);
@@ -109,7 +123,6 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
 
                 //Get info about the selected place.
                 startLocation = place.getLatLng();
-                editLocation.setText("dest_latitude: " + startLocation.latitude + " dest_longitude: " + startLocation.longitude);
                 Log.i(TAG, "Place: " + place.getName());
             }
 
@@ -125,7 +138,6 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
 
                 //Get info about the selected destination.
                 endLocation = place.getLatLng();
-                editLocation.setText("dest_latitude: " + endLocation.latitude + " dest_longitude: " + endLocation.longitude);
                 Log.i(TAG, "Place: " + place.getName());
             }
 
@@ -163,6 +175,7 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
                 String oneDirection = null;
                 String duration = "";
                 String fullRoute = "";
+                String txtRoute = "";
                 if (results.routes.length != 0){
                     DirectionsRoute firstRoute = results.routes[0];
                     for(int i = 0; i < firstRoute.legs.length; i++){
@@ -171,7 +184,6 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
                             oneDirection = firstRoute.legs[i].steps[j].htmlInstructions;
                             //get duration in ms
                             duration = String.valueOf(firstRoute.legs[i].steps[j].duration.inSeconds * 1000L);
-                            fullRoute += "\n" + firstRoute.legs[i].steps[j].htmlInstructions + " duration " + firstRoute.legs[i].steps[j].duration.inSeconds;
                             /**
                              * Parse DirectionsStep String
                              *
@@ -187,20 +199,19 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
                             if (oneDirection.contains("left")
                                     || (oneDirection.contains("roundabout") && oneDirection.contains("1st"))){
 
-                                txtRoute += "1 " + duration + "\n";
+                                txtRoute += "1 " + duration + ".";
 
                             } else if (oneDirection.contains("roundabout") && (oneDirection.contains("2nd") || oneDirection.contains("through"))){
 
-                                txtRoute += "2 "+ duration +"\n";
+                                txtRoute += "2 "+ duration +".";
 
                             } else if (oneDirection.contains("right")
                                     || oneDirection.contains("roundabout")){
 
-                                txtRoute +="3 " + duration + "\n";
+                                txtRoute +="3 " + duration + ".";
 
                             } else {
-
-                                txtRoute += "2 "+ duration + "\n";
+                                txtRoute += "2 "+ duration + ".";
 
                             }
 
@@ -210,16 +221,7 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
                     txtRoute = "0"; //no route found
                 }
 
-                //editLocation.setText(txtRoute + fullRoute);
-
-
-
-
-
-
-
-
-
+                createCPP(txtRoute);
 
 //                flag = displayGpsStatus();
 //                if (flag) {
@@ -241,9 +243,167 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
         });
     }
 
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        //Could not connect to Google APIs.
+
+
+    public static void lightup(PrintWriter writer, int pinVal, int duration, int nextpinVal) {
+        //turn off the rest
+        int holdDirtime = 0;
+        int timeFactor = 10;
+        writer.println("	uBit.io.P0.setDigitalValue(0);");
+        writer.println("	uBit.io.P1.setDigitalValue(1);");
+        writer.println("	uBit.io.P2.setDigitalValue(0);");
+
+        //set how long you will keep the light in one direction
+        //if (duration > 3000) {
+        //duration-=3000;
+        //holdDirtime = 3000;
+        //} else {
+        //holdDirtime = duration;
+        //duration =0;
+        //}
+        //light up for 3000(or less) seconds
+        //writer.println("	uBit.io.P"+pinVal+".setDigitalValue(1);"); //light up for 3s or less
+        //writer.println("	uBit.sleep("+holdDirtime+");");
+        //writer.println("	uBit.io.P"+pinVal+".setDigitalValue(0);"); //off dir, change back to straight
+        //writer.println("	uBit.io.P1.setDigitalValue(1);");
+
+        if (nextpinVal != 1) {
+            if (duration >= 6000) {
+                //continue straight until last 6 secs then point next directn blinking
+                writer.println("	uBit.sleep(" + (duration - 6000)/timeFactor + "); ");
+                writer.println("	uBit.io.P1.setDigitalValue(0);");
+                writer.println("	for (int i=0; i<3; i++) {");
+                writer.println("	uBit.io.P" + nextpinVal + ".setDigitalValue(1);");
+                writer.println("	uBit.sleep(50); ");
+                writer.println("	uBit.io.P" + nextpinVal + ".setDigitalValue(0);");
+                writer.println("	uBit.sleep(50);} ");
+                writer.println("	uBit.io.P" + nextpinVal + ".setDigitalValue(1);");
+                writer.println("	uBit.sleep("+(3000/timeFactor)+"); ");
+                writer.println("	uBit.io.P1.setDigitalValue(1);");
+            } else {
+                writer.println("	uBit.io.P1.setDigitalValue(0);");
+                writer.println("	for (int i=0; i<"+(duration-3000)/timeFactor+"; i+=100) {");
+                writer.println("	uBit.io.P" + nextpinVal + ".setDigitalValue(1);");
+                writer.println("	uBit.sleep(50); ");
+                writer.println("	uBit.io.P" + nextpinVal + ".setDigitalValue(0);");
+                writer.println("	uBit.sleep(50);} ");
+                writer.println("	uBit.io.P1.setDigitalValue(1);");
+            }
+        } else {
+            writer.println("	uBit.sleep(" + duration/timeFactor + "); ");
+        }
+
+
+    }
+
+
+    public void createCPP(String val) {
+        File file = new File(this.getExternalFilesDir(null), "main.cpp");
+        System.out.println(this.getExternalFilesDir(null).getAbsolutePath());
+        PrintWriter writer = null;
+
+        int timeFactor = 1;
+        try {
+
+            String[] singleCommands = null;
+            //break up into single commands of direction and duration
+            singleCommands = val.split("\\.");
+
+            //break up into duration and line commands
+            String[][] dirNtime = new String[singleCommands.length][2];
+            for (int i=0; i<singleCommands.length; i++) {
+                dirNtime[i] = singleCommands[i].split(" ");
+                //System.out.println(dirNtime[i][0]);
+                //System.out.println(dirNtime[i][1]);
+
+            }
+
+            writer = new PrintWriter(file);
+            writer.println("#include \"MicroBit.h\"");
+            writer.println("#include <fstream>");
+            writer.println("#include <string.h>");
+            writer.println();
+            writer.println("MicroBit uBit;");
+            writer.println("int main() {");
+            writer.println("	uBit.init();");
+
+            int duration, pinVal=1,nextpinVal;
+
+            for (int i=0; i<dirNtime.length; i++) {
+                duration = Integer.parseInt(dirNtime[i][1]);
+                duration /= timeFactor;
+                nextpinVal=1;
+                if (Integer.parseInt(dirNtime[i][0]) == 1) {
+                    //left
+                    pinVal = 0;
+                    //get next pin value if there is one
+                    if ((i+1)<dirNtime.length) {
+                        if (Integer.parseInt(dirNtime[i+1][0]) == 1) nextpinVal = 0;
+                        if (Integer.parseInt(dirNtime[i+1][0]) == 3) nextpinVal = 2;
+                    }
+                    //only light for short while
+                    lightup(writer,pinVal,duration, nextpinVal);
+
+                } else if (Integer.parseInt(dirNtime[i][0]) == 2) {
+                    //straight
+                    pinVal = 1;
+                    if ((i+1)<dirNtime.length) {
+                        if (Integer.parseInt(dirNtime[i+1][0]) == 1) nextpinVal = 0;
+                        if (Integer.parseInt(dirNtime[i+1][0]) == 3) nextpinVal = 2;
+                    }
+                    lightup(writer,pinVal,duration, nextpinVal);
+                } else if (Integer.parseInt(dirNtime[i][0]) == 3) {
+                    //right
+                    pinVal = 2;
+                    if ((i+1)<dirNtime.length) {
+                        if (Integer.parseInt(dirNtime[i+1][0]) == 1) nextpinVal = 0;
+                        if (Integer.parseInt(dirNtime[i+1][0]) == 3) nextpinVal = 2;
+                    }
+                    lightup(writer,pinVal,duration, nextpinVal);
+                }
+            }
+            //writer.println("	uBit.io.P0.setDigitalValue(1);");
+            //writer.println("	uBit.io.P1.setDigitalValue(1);");
+            //writer.println("	uBit.io.P2.setDigitalValue(1);");
+            writer.println("	release_fiber(); }");
+
+
+        } catch (FileNotFoundException e) {
+            System.err.println("File wasn't found.");
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("IO failed.");
+            e.printStackTrace();
+        }
+
+        writer.close();
+        System.out.println("Print successful");
+        sendRouteEmail();
+    }
+
+    private void sendRouteEmail(){
+        String fileLocation = "/storage/emulated/0/Android/data/uk.ac.cam.km662.arm_hackathon_2016/files/main.cpp";
+        File file = new File(fileLocation);
+        final Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("message/rfc822");
+        intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"dsjw2@cam.ac.uk"});
+        intent.putExtra(Intent.EXTRA_SUBJECT, "route");
+        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+
+        try{
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+               /* Create an Intent that will send e-mail. */
+                    startActivity(Intent.createChooser(intent, "Send route"));
+                }
+            }, 3000);
+
+            System.out.println("Email Sent");
+        } catch (android.content.ActivityNotFoundException e){
+            Toast.makeText(StartDirections.this, "There are no e-mail clients installed.", Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     protected void alertbox(String title, String mymessage) {
@@ -357,6 +517,13 @@ public class StartDirections extends AppCompatActivity implements OnConnectionFa
 //            // TODO Auto-generated method stub
 //        }
 //    }
+
+
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        //Could not connect to Google APIs.
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

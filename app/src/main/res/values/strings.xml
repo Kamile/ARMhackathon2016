@@ -1,6 +1,8 @@
 <resources>
-    <string name="app_name">ARM_hackathon_2016</string>
+    <string name="app_name">ARMhack</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_load_page">LoadPage</string>
 
     <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
 </resources>
