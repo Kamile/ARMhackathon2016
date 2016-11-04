@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/Users/kamile/.gradle/caches/modules-2/files-2.1/com.squareup.okhttp/okhttp/2.7.5/7a15a7db50f86c4b64aa3367424a60e3a325b8f1/okhttp-2.7.5.jar"
+        jumboMode="false"
+        revision="25.0.0"
+        sha1="7a15a7db50f86c4b64aa3367424a60e3a325b8f1">
+        <dex dex="/Users/kamile/ARMhackathon2016/app/build/intermediates/pre-dexed/debug/okhttp-2.7.5-8e04ca8e67ea1d354840d7426c049a9cb1294a6b.jar" />
+    </item>
+    <item
+        jar="/Users/kamile/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.3.1/ecb6e1f8e4b0e84c4b886c2f14a1500caf309757/gson-2.3.1.jar"
+        jumboMode="false"
+        revision="25.0.0"
+        sha1="ecb6e1f8e4b0e84c4b886c2f14a1500caf309757">
+        <dex dex="/Users/kamile/ARMhackathon2016/app/build/intermediates/pre-dexed/debug/gson-2.3.1-4573f94095df8374f621b4b55efc2207c01d5bd4.jar" />
+    </item>
+    <item
+        jar="/Users/kamile/.gradle/caches/modules-2/files-2.1/joda-time/joda-time/2.4/89e9725439adffbbd41c5f5c215c136082b34a7f/joda-time-2.4.jar"
+        jumboMode="false"
+        revision="25.0.0"
+        sha1="89e9725439adffbbd41c5f5c215c136082b34a7f">
+        <dex dex="/Users/kamile/ARMhackathon2016/app/build/intermediates/pre-dexed/debug/joda-time-2.4-0c4a3313341d92f21bcb10062fbaf19330c8e3ad.jar" />
+    </item>
+    <item
+        jar="/Users/kamile/.gradle/caches/modules-2/files-2.1/com.google.maps/google-maps-services/0.1.16/35be1874f3f1f2a461f1ce0f409da318b6c21365/google-maps-services-0.1.16.jar"
+        jumboMode="false"
+        revision="25.0.0"
+        sha1="35be1874f3f1f2a461f1ce0f409da318b6c21365">
+        <dex dex="/Users/kamile/ARMhackathon2016/app/build/intermediates/pre-dexed/debug/google-maps-services-0.1.16-6ce1c79784459b4b42a37af8476110f42c67b951.jar" />
+    </item>
+    <item
+        jar="/Users/kamile/.gradle/caches/modules-2/files-2.1/com.squareup.okio/okio/1.6.0/98476622f10715998eacf9240d6b479f12c66143/okio-1.6.0.jar"
+        jumboMode="false"
+        revision="25.0.0"
+        sha1="98476622f10715998eacf9240d6b479f12c66143">
+        <dex dex="/Users/kamile/ARMhackathon2016/app/build/intermediates/pre-dexed/debug/okio-1.6.0-67c9ceb951f6477375b4962b606212901145a3b1.jar" />
+    </item>
+
+</items>
